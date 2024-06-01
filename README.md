@@ -1,4 +1,4 @@
-##GStreamer RTMP Video Player
+# GStreamer RTMP Video Player
 
 This Rust program demonstrates how to build a simple RTMP player using GStreamer. It plays a video from a given RTMP (or any) URI and handles both audio and video streams.
 
