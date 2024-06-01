@@ -1,6 +1,6 @@
-**GStreamer Video Player**
+##GStreamer RTMP Video Player
 
-This Rust program demonstrates how to build a simple video player using GStreamer. It plays a video from a given URI and handles both audio and video streams.
+This Rust program demonstrates how to build a simple RTMP player using GStreamer. It plays a video from a given RTMP (or any) URI and handles both audio and video streams.
 
 **Prerequisites**
 
@@ -34,7 +34,7 @@ The code initializes GStreamer, creates the necessary elements for the pipeline,
  - Handles error, state change, and EOS (end of stream) messages.
 
 **Running the Code**
-1. Ensure you have GStreamer installed on your system.
-2. Add the required dependencies to your Cargo.toml.
-3. Copy the code into your main.rs file.
-4. Run the program using cargo run.
+ - Ensure you have GStreamer installed on your system.
+ - Add the required dependencies to your Cargo.toml.
+ - Copy the code into your main.rs file.
+ - Run the program using cargo run.

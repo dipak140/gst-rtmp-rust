@@ -5,7 +5,8 @@ pub fn tutorial_main_uridecode() {
     // Initialize GStreamer
     gst::init().unwrap();
 
-    let uri = "https://live-par-2-cdn-alt.livepush.io/live/bigbuckbunnyclip/index.m3u8";
+    // RTMP URL
+    let uri = "rtmp://your/rtmp/url";
 
     // Create the elements
     let source = gst::ElementFactory::make("uridecodebin")
