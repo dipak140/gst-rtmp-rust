@@ -1,5 +1,5 @@
-use gstreamer::{self as gst, caps::SomeFeatures};
 use gst::prelude::*;
+use gstreamer::{self as gst, caps::SomeFeatures};
 
 pub fn tutorial_main_uridecode() {
     // Initialize GStreamer
@@ -13,14 +13,26 @@ pub fn tutorial_main_uridecode() {
         .property("uri", uri)
         .build()
         .expect("Could not create uridecodebin element.");
-    let video_convert = gst::ElementFactory::make("videoconvert")
-        .name("video_convert")
+    let test_source = gst::ElementFactory::make("videotestsrc")
+        .name("test_source")
+        .build()
+        .expect("Could not create videotestsrc element.");
+    let video_convert1 = gst::ElementFactory::make("videoconvert")
+        .name("video_convert1")
+        .build()
+        .expect("Could not create videoconvert element.");
+    let video_convert2 = gst::ElementFactory::make("videoconvert")
+        .name("video_convert2")
         .build()
         .expect("Could not create videoconvert element.");
     let video_sink = gst::ElementFactory::make("autovideosink")
         .name("video_sink")
         .build()
         .expect("Could not create autovideosink element.");
+    let compositor = gst::ElementFactory::make("compositor")
+        .name("compositor")
+        .build()
+        .expect("Could not create compositor element.");
     let audio_convert = gst::ElementFactory::make("audioconvert")
         .name("audio_convert")
         .build()
@@ -37,12 +49,36 @@ pub fn tutorial_main_uridecode() {
     // Create the empty pipeline
     let pipeline = gst::Pipeline::with_name("test-pipeline");
 
+    // Set properties for the test video source
+    test_source.set_property_from_str("pattern", "smpte");
+
     // Build the pipeline
     pipeline
-        .add_many(&[&source, &video_convert, &video_sink, &audio_convert, &audio_resample, &audio_sink])
+        .add_many(&[
+            &source,
+            &test_source,
+            &video_convert1,
+            &video_convert2,
+            &compositor,
+            &video_sink,
+            &audio_convert,
+            &audio_resample,
+            &audio_sink,
+        ])
         .unwrap();
-    gst::Element::link_many(&[&video_convert, &video_sink]).expect("Video elements could not be linked.");
-    gst::Element::link_many(&[&audio_convert, &audio_resample, &audio_sink]).expect("Audio elements could not be linked.");
+    gst::Element::link_many(&[&video_convert1, &compositor])
+        .expect("Video elements could not be linked.");
+    gst::Element::link_many(&[&video_convert2, &compositor])
+        .expect("Video elements could not be linked.");
+    gst::Element::link_many(&[&compositor, &video_sink])
+        .expect("Compositor to video sink could not be linked.");
+    gst::Element::link_many(&[&audio_convert, &audio_resample, &audio_sink])
+        .expect("Audio elements could not be linked.");
+
+    // Link the test source to the compositor
+    test_source
+        .link(&video_convert2)
+        .expect("Test source could not be linked to video convert");
 
     // Connect the pad-added signal
     source.connect_pad_added(move |src, src_pad| {
@@ -57,9 +93,9 @@ pub fn tutorial_main_uridecode() {
         let new_pad_type = new_pad_struct.name();
 
         if new_pad_type.starts_with("video/x-raw") {
-            let sink_pad = video_convert
+            let sink_pad = video_convert1
                 .static_pad("sink")
-                .expect("Failed to get static sink pad from video_convert");
+                .expect("Failed to get static sink pad from video_convert1");
             if sink_pad.is_linked() {
                 println!("Video pad is already linked. Ignoring.");
                 return;
@@ -104,7 +140,7 @@ pub fn tutorial_main_uridecode() {
         match msg.view() {
             MessageView::Error(err) => {
                 eprintln!(
-                    "Error received from element {:?} {}",
+                    "Error received from element {:?}: {}",
                     err.src().map(|s| s.path_string()),
                     err.error()
                 );
